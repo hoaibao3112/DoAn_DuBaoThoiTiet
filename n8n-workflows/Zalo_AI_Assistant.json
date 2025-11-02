@@ -1,0 +1,146 @@
+{
+  "name": "Zalo AI Assistant Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zalo-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Zalo Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "zalo-ai-assistant"
+    },
+    {
+      "parameters": {
+        "url": "=http://ai-assistant:8000/generate",
+        "authentication": "none",
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({\n  \"prompt\": $json.body.message || $json.body.text || $json.body.prompt,\n  \"user_id\": $json.body.user_id || $json.body.fromuid\n}) }}"
+      },
+      "id": "call-ai-service",
+      "name": "Call AI Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ \"dulieu_\" + $now.toFormat('yyyyMMdd_HHmmss') + \".json\" }}",
+        "resolveData": true,
+        "options": {
+          "parents": [
+            "={{ $env.GDRIVE_FOLDER_ID }}"
+          ]
+        },
+        "binaryData": false,
+        "fileContent": "={{ JSON.stringify({\n  \"timestamp\": $now.toISO(),\n  \"prompt\": $json.prompt,\n  \"response\": $('Call AI Service').item.json.ad_text,\n  \"user_id\": $json.user_id\n}, null, 2) }}"
+      },
+      "id": "save-to-drive",
+      "name": "Save to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [690, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-credential",
+          "name": "Google Drive Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ZALO_API_URL || 'https://openapi.zalo.me/v2.0/oa/message' }}",
+        "authentication": "none",
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "queryParametersJson": "={{ JSON.stringify({access_token: $env.ZALO_ACCESS_TOKEN}) }}",
+        "bodyParametersJson": "={{ JSON.stringify({\n  \"recipient\": {\"user_id\": $('Call AI Service').item.json.user_id || $json.body.user_id},\n  \"message\": {\"type\": \"text\", \"text\": $('Call AI Service').item.json.ad_text}\n}) }}"
+      },
+      "id": "send-to-zalo",
+      "name": "Send to Zalo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [690, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  \"success\": true,\n  \"message\": \"Processed successfully\",\n  \"ad_text\": $('Call AI Service').item.json.ad_text,\n  \"drive_file_id\": $('Save to Google Drive').item.json.id\n}) }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [910, 300]
+    }
+  ],
+  "connections": {
+    "Zalo Webhook": {
+      "main": [
+        [
+          {
+            "node": "Call AI Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call AI Service": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Zalo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Zalo": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1",
+  "id": "zalo-ai-assistant-workflow",
+  "meta": {
+    "instanceId": "local"
+  },
+  "tags": []
+}
