@@ -1,0 +1,81 @@
+#! ai-assistant-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: ai-assistant
+    namespace: doan-ptdl
+    labels:
+        com.docker.compose.project: doan_ptdl
+        com.docker.compose.service: ai-assistant
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: doan_ptdl
+            com.docker.compose.service: ai-assistant
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: doan_ptdl
+                com.docker.compose.service: ai-assistant
+                com.docker.compose.network.ai-network: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: ai-assistant
+                  image: doan_ptdl-ai-assistant
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: APP_PORT
+                      value: "8000"
+                    - name: DEFAULT_CITY
+                      value: "Hanoi"
+                    - name: GDRIVE_FOLDER_ID
+                      value: "1aF3aQPwQrcubGYoH1VmF2Of6Kp_SQyu1"
+                    - name: GOOGLE_APPLICATION_CREDENTIALS
+                      value: "./secrets/ggdangnhap-476107-553fbee0149d.json"
+                    - name: N8N_PASSWORD
+                      value: "Hoaibao@@123"
+                    - name: N8N_USER
+                      value: "admin"
+                    - name: OPENAI_API_KEY
+                      value: ""
+                    - name: OPENAI_MODEL
+                      value: "gpt-3.5-turbo"
+                    - name: OPENWEATHER_API_KEY
+                      value: "YOUR_OPENWEATHER_KEY"
+                    - name: OPENWEATHER_BASE_URL
+                      value: "https://api.openweathermap.org/data/2.5"
+                    - name: TIMEZONE
+                      value: "Asia/Ho_Chi_Minh"
+                    - name: WAQI_BASE_URL
+                      value: "https://api.waqi.info"
+                    - name: WAQI_TOKEN
+                      value: "YOUR_WAQI_TOKEN"
+                    - name: WEBHOOK_URL
+                      value: "http://localhost:5678/"
+                    - name: ZALO_ACCESS_TOKEN
+                      value: "YOUR_ZALO_ACCESS_TOKEN"
+                    - name: ZALO_API_URL
+                      value: "https://openapi.zalo.me/v2.0/oa/message"
+                  livenessProbe:
+                    exec:
+                        command: ['curl -f http://localhost:8000/docs']
+                    periodSeconds: 30
+                    timeoutSeconds: 10
+                    failureThreshold: 3
+                  ports:
+                    - name: ai-assista-8000
+                      containerPort: 8000
+                  volumeMounts:
+                    - name: secrets-service-account-json
+                      mountPath: /secrets/service_account.json
+                      readOnly: true
+            volumes:
+                - name: secrets-service-account-json
+                  hostPath:
+                    path: C:\Users\PC\Desktop\Doan_PTDL\secrets\service_account.json
+                  readOnly: true

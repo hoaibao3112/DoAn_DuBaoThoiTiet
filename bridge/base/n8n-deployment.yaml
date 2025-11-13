@@ -1,0 +1,64 @@
+#! n8n-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: n8n
+    namespace: doan-ptdl
+    labels:
+        com.docker.compose.project: doan_ptdl
+        com.docker.compose.service: n8n
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: doan_ptdl
+            com.docker.compose.service: n8n
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: doan_ptdl
+                com.docker.compose.service: n8n
+                com.docker.compose.network.ai-network: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: n8n
+                  image: n8nio/n8n:latest
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: GENERIC_TIMEZONE
+                      value: "Asia/Ho_Chi_Minh"
+                    - name: N8N_BASIC_AUTH_ACTIVE
+                      value: "true"
+                    - name: N8N_BASIC_AUTH_PASSWORD
+                      value: "Hoaibao@@123"
+                    - name: N8N_BASIC_AUTH_USER
+                      value: "admin"
+                    - name: N8N_HOST
+                      value: "0.0.0.0"
+                    - name: N8N_PORT
+                      value: "5678"
+                    - name: N8N_PROTOCOL
+                      value: "http"
+                    - name: NODE_ENV
+                      value: "production"
+                    - name: WEBHOOK_URL
+                      value: "http://localhost:5678/"
+                  ports:
+                    - name: n8n-5678
+                      containerPort: 5678
+                  volumeMounts:
+                    - name: home-node--n8n
+                      mountPath: /home/node/.n8n
+                    - name: home-node--n8n-workflows
+                      mountPath: /home/node/.n8n/workflows
+            volumes:
+                - name: home-node--n8n
+                  persistentVolumeClaim:
+                    claimName: n8n-n8n-data
+                - name: home-node--n8n-workflows
+                  hostPath:
+                    path: C:\Users\PC\Desktop\Doan_PTDL\n8n-workflows

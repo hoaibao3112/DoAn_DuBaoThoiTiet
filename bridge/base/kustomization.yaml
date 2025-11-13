@@ -1,0 +1,16 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-doan-ptdl-namespace.yaml
+    - ai-assistant-C:\Users\PC\Desktop\Doan_PTDL\secrets\service_account.json-persistentVolumeClaim.yaml
+    - ai-assistant-deployment.yaml
+    - ai-assistant-expose.yaml
+    - ai-assistant-service.yaml
+    - ai-network-network-policy.yaml
+    - n8n-C:\Users\PC\Desktop\Doan_PTDL\n8n-workflows-persistentVolumeClaim.yaml
+    - n8n-deployment.yaml
+    - n8n-expose.yaml
+    - n8n-n8n-data-persistentVolumeClaim.yaml
+    - n8n-service.yaml

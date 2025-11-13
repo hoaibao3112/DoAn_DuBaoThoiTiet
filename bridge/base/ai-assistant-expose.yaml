@@ -1,0 +1,18 @@
+#! ai-assistant-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: ai-assistant
+    namespace: doan-ptdl
+    labels:
+        com.docker.compose.project: doan_ptdl
+        com.docker.compose.service: ai-assistant
+spec:
+    selector:
+        com.docker.compose.project: doan_ptdl
+        com.docker.compose.service: ai-assistant
+    ports:
+        - name: ai-assista-8000
+          port: 8000
+          targetPort: ai-assista-8000

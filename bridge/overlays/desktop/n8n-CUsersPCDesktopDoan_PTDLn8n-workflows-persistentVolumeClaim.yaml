@@ -1,0 +1,9 @@
+#! n8n-C:\Users\PC\Desktop\Doan_PTDL\n8n-workflows-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: n8n-c--users-pc-desktop-doan-ptdl-n8n-workflows
+    namespace: doan-ptdl
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

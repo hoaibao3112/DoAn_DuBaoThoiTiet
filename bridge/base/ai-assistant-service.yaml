@@ -1,0 +1,23 @@
+# check if there is at least one published port
+
+#! ai-assistant-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: ai-assistant-published
+    namespace: doan-ptdl
+    labels:
+        com.docker.compose.project: doan_ptdl
+        com.docker.compose.service: ai-assistant
+spec:
+    selector:
+        com.docker.compose.project: doan_ptdl
+        com.docker.compose.service: ai-assistant
+    ports:
+        - name: ai-assista-8000
+          port: 8000
+          protocol: TCP
+          targetPort: ai-assista-8000
+
+# check if there is at least one published port

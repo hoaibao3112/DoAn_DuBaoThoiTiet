@@ -1,0 +1,8 @@
+#! 0-doan-ptdl-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: doan-ptdl
+    labels:
+        com.docker.compose.project: doan_ptdl

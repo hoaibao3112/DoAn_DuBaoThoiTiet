@@ -1,0 +1,9 @@
+#! n8n-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: n8n-published
+    namespace: doan-ptdl
+spec:
+    type: LoadBalancer
