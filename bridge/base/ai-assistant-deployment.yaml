@@ -49,6 +49,8 @@ spec:
                       value: "YOUR_OPENWEATHER_KEY"
                     - name: OPENWEATHER_BASE_URL
                       value: "https://api.openweathermap.org/data/2.5"
+                    - name: TELEGRAM_BOT_TOKEN
+                      value: "8319134968:AAFooMNFJ0QoCBDOHGx3Yh35iE5llShig3w"
                     - name: TIMEZONE
                       value: "Asia/Ho_Chi_Minh"
                     - name: WAQI_BASE_URL
@@ -56,14 +58,17 @@ spec:
                     - name: WAQI_TOKEN
                       value: "YOUR_WAQI_TOKEN"
                     - name: WEBHOOK_URL
-                      value: "http://localhost:5678/"
+                      value: "https://491563d12aef.ngrok-free.app/"
                     - name: ZALO_ACCESS_TOKEN
                       value: "YOUR_ZALO_ACCESS_TOKEN"
                     - name: ZALO_API_URL
                       value: "https://openapi.zalo.me/v2.0/oa/message"
                   livenessProbe:
                     exec:
-                        command: ['curl -f http://localhost:8000/docs']
+                        command:
+                            - /bin/sh
+                            - -c
+                            - python -c "import socket; socket.create_connection(('127.0.0.1',8000),1)"
                     periodSeconds: 30
                     timeoutSeconds: 10
                     failureThreshold: 3

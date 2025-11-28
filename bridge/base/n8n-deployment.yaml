@@ -29,6 +29,8 @@ spec:
                   image: n8nio/n8n:latest
                   imagePullPolicy: IfNotPresent
                   env:
+                    - name: GDRIVE_FOLDER_ID
+                      value: "1aF3aQPwQrcubGYoH1VmF2Of6Kp_SQyu1"
                     - name: GENERIC_TIMEZONE
                       value: "Asia/Ho_Chi_Minh"
                     - name: N8N_BASIC_AUTH_ACTIVE
@@ -46,7 +48,9 @@ spec:
                     - name: NODE_ENV
                       value: "production"
                     - name: WEBHOOK_URL
-                      value: "http://localhost:5678/"
+                      value: "https://491563d12aef.ngrok-free.app/"
+                    - name: ZALO_ACCESS_TOKEN
+                      value: "YOUR_ZALO_ACCESS_TOKEN"
                   ports:
                     - name: n8n-5678
                       containerPort: 5678

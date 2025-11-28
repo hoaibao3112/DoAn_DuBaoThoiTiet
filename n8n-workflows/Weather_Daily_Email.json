@@ -1,0 +1,96 @@
+{
+  "name": "Daily Weather Email",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "everyDay",
+        "everyDayTime": "06:30",
+        "timeZone": "Asia/Ho_Chi_Minh"
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Return array of recipients. Replace or change to read from Google Sheets\nreturn [\n  { json: { email: 'youremail@example.com', name: 'Bạn', city: 'Ho Chi Minh' } },\n  // Add more recipients here or switch to a Google Sheets node to read recipients dynamically\n];"
+      },
+      "name": "Recipients",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "url": "http://ai-assistant:8000/weather/current?city={{ $json.city }}",
+        "options": {},
+        "responseFormat": "json",
+        "convertTo": "json",
+        "headerParametersJson": "=null",
+        "queryParametersJson": "=null"
+      },
+      "name": "GetWeather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "secure": false,
+        "user": "={{ $env.EMAIL_USER }}",
+        "password": "={{ $env.EMAIL_PASS }}",
+        "from": "={{ $env.EMAIL_USER }}",
+        "to": "={{ $json.email }}",
+        "subject": "={{ 'Thông báo thời tiết ' + $json.city }}",
+        "text": "={{ 'Thời tiết ' + $json.city + ' - ' + $json.date + '\nNhiệt độ: ' + $json.temperature + '°C (Feels like ' + $json.feels_like + '°C)\nĐộ ẩm: ' + $json.humidity + '%\nMô tả: ' + $json.description + '\nAQI: ' + $json.aqi + ' (' + $json.aqi_category + ')' }}",
+        "html": "=<div><h3>Thời tiết {{$json.city}} — {{$json.date}}</h3><p><strong>Nhiệt độ:</strong> {{$json.temperature}}°C (Feels like {{$json.feels_like}}°C)</p><p><strong>Độ ẩm:</strong> {{$json.humidity}}%</p><p><strong>Mô tả:</strong> {{$json.description}}</p><p><strong>AQI:</strong> {{$json.aqi}} ({{$json.aqi_category}})</p></div>"
+      },
+      "name": "SendEmail",
+      "type": "n8n-nodes-base.smtp",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Recipients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recipients": {
+      "main": [
+        [
+          {
+            "node": "GetWeather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetWeather": {
+      "main": [
+        [
+          {
+            "node": "SendEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "daily-weather-email"
+}

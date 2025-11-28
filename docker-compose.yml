@@ -12,13 +12,15 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       # Mount service account JSON for Google Drive
       - ./secrets/service_account.json:/secrets/service_account.json:ro
     networks:
       - ai-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      test: ["CMD-SHELL", "python -c \"import socket; socket.create_connection(('127.0.0.1',8000),1)\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -31,7 +33,7 @@ services:
     ports:
       - "5678:5678"
     environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_ACTIVE=false
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-changeme}
       - N8N_HOST=0.0.0.0
@@ -40,6 +42,12 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
       - GENERIC_TIMEZONE=${TIMEZONE:-Asia/Ho_Chi_Minh}
+      # Application-specific env vars used by workflows (set in .env or here)
+      - ZALO_ACCESS_TOKEN=${ZALO_ACCESS_TOKEN:-}
+      - GDRIVE_FOLDER_ID=${GDRIVE_FOLDER_ID:-}
+      # Email SMTP credentials for workflows (set in .env)
+      - EMAIL_USER=${EMAIL_USER:-}
+      - EMAIL_PASS=${EMAIL_PASS:-}
     volumes:
       - n8n-data:/home/node/.n8n
       # Optional: mount workflows for backup
@@ -48,6 +56,36 @@ services:
       - ai-network
     depends_on:
       - ai-assistant
+
+  # Streamlit frontend for testing (replaces Telegram UI for manual testing)
+  streamlit:
+    image: python:3.11-slim
+    container_name: streamlit
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app:cached
+    command: >
+      bash -lc "pip install -r requirements.txt && streamlit run frontend/streamlit_app.py \
+      --server.port 8501 --server.address 0.0.0.0 --server.enableCORS false"
+    ports:
+      - "8501:8501"
+    environment:
+      - AI_ASSISTANT_URL=http://ai-assistant:8000/ask
+    networks:
+      - ai-network
+    depends_on:
+      - ai-assistant
+
+  # Redis cache for neighbor computations and shared cache
+  redis:
+    image: redis:7-alpine
+    container_name: ai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - ai-network
 
   # Optional: PostgreSQL for n8n (recommended for production)
   # Uncomment if you want persistent database instead of SQLite
