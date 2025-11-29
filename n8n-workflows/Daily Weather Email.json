@@ -1,0 +1,128 @@
+{
+  "name": "Daily Weather Email",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {}
+          ]
+        }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3c28910d-3efc-426a-b4ab-57bb51d012f1"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Return array of recipients. Replace or change to read from Google Sheets\nreturn [\n  { json: { email: 'baohoaitran3112@gmail.com', name: 'Bạn', city: 'Ho Chi Minh' } },\n  // Add more recipients here or switch to a Google Sheets node to read recipients dynamically\n];"
+      },
+      "name": "Recipients",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0b7d5c81-fab4-4d98-a755-a043bca817c1"
+    },
+    {
+      "parameters": {
+        "url": "=http://172.18.0.4:8000/weather/current",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "city",
+              "value": "={{$json[\"city\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "GetWeather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "5df8f96a-e04d-4011-9f55-f7723fd51b6f"
+    },
+    {
+      "parameters": {
+        "fromEmail": "hoaibao4062004@gmail.com",
+        "toEmail": "baohoaitran3112@gmail.com",
+        "subject": "du bao thoi tiet",
+        "html": "<div><h3>Thành phố {{$json[\"city\"]}} — {{$json[\"date\"]}}</h3><p><strong>Nhiệt độ:</strong> {{$json[\"temperature\"]}}°C (Feels like {{$json[\"feels_like\"]}}°C)</p><p><strong>Độ ẩm:</strong> {{$json[\"humidity\"]}}%</p><p><strong>Mô tả:</strong> {{$json[\"description\"]}}</p><p><strong>AQI:</strong> {{$json[\"aqi\"]}} ({{$json[\"aqi_category\"]}}) — PM2.5: {{$json[\"pm25\"]}} | PM10: {{$json[\"pm10\"]}}</p><p><strong>Khuyến nghị:</strong> {{$json[\"recommendation\"]}}</p><!-- chart disabled until backend updated --></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "485c0e8a-81c0-4419-b234-578d3f1b4c90",
+      "name": "Send email",
+      "webhookId": "6d56dfec-668b-4352-9572-f4cc385adab7",
+      "credentials": {
+        "smtp": {
+          "id": "1OOA45Uha8dAfRnT",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Recipients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recipients": {
+      "main": [
+        [
+          {
+            "node": "GetWeather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetWeather": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "105ad684-47f6-44d2-8b39-7417bb620efe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "65a972d43d29e8547a4962540142d6022a0c05d3ac78008074a87e688efd0b29"
+  },
+  "id": "Fsdh6A87tnNhM0YS",
+  "tags": []
+}

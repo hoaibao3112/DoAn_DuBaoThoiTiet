@@ -24,12 +24,12 @@
     {
       "parameters": {
         "authentication": "none",
-        "url": "http://ai-assistant:8000/weather/current?city={{ $json.city }}",
+        "url": "http://172.18.0.4:8000/weather/current",
         "options": {},
         "responseFormat": "json",
         "convertTo": "json",
         "headerParametersJson": "=null",
-        "queryParametersJson": "=null"
+        "queryParametersJson": "[{\"name\":\"city\",\"value\":\"{{$json[\\\"city\\\"]}}\"}]"
       },
       "name": "GetWeather",
       "type": "n8n-nodes-base.httpRequest",
@@ -41,13 +41,13 @@
         "host": "smtp.gmail.com",
         "port": 587,
         "secure": false,
-        "user": "={{ $env.EMAIL_USER }}",
-        "password": "={{ $env.EMAIL_PASS }}",
-        "from": "={{ $env.EMAIL_USER }}",
-        "to": "={{ $json.email }}",
-        "subject": "={{ 'Thông báo thời tiết ' + $json.city }}",
-        "text": "={{ 'Thời tiết ' + $json.city + ' - ' + $json.date + '\nNhiệt độ: ' + $json.temperature + '°C (Feels like ' + $json.feels_like + '°C)\nĐộ ẩm: ' + $json.humidity + '%\nMô tả: ' + $json.description + '\nAQI: ' + $json.aqi + ' (' + $json.aqi_category + ')' }}",
-        "html": "=<div><h3>Thời tiết {{$json.city}} — {{$json.date}}</h3><p><strong>Nhiệt độ:</strong> {{$json.temperature}}°C (Feels like {{$json.feels_like}}°C)</p><p><strong>Độ ẩm:</strong> {{$json.humidity}}%</p><p><strong>Mô tả:</strong> {{$json.description}}</p><p><strong>AQI:</strong> {{$json.aqi}} ({{$json.aqi_category}})</p></div>"
+        "user": "{{$env.EMAIL_USER}}",
+        "password": "{{$env.EMAIL_PASS}}",
+        "from": "{{$env.EMAIL_USER}}",
+        "to": "{{$node[\"Recipients\"].json[\"email\"]}}",
+        "subject": "Thông báo thời tiết {{$json[\"city\"]}}",
+        "text": "Thời tiết {{$json[\"city\"]}} - {{$json[\"date\"]}}\nNhiệt độ: {{$json[\"temperature\"]}}°C (Feels like {{$json[\"feels_like\"]}}°C)\nĐộ ẩm: {{$json[\"humidity\"]}}%\nMô tả: {{$json[\"description\"]}}\nAQI: {{$json[\"aqi\"]}} ({{$json[\"aqi_category\"]}})",
+        "html": "<div><h3>Thành phố {{$json[\"city\"]}} — {{$json[\"date\"]}}</h3><p><strong>Nhiệt độ:</strong> {{$json[\"temperature\"]}}°C (Feels like {{$json[\"feels_like\"]}}°C)</p><p><strong>Độ ẩm:</strong> {{$json[\"humidity\"]}}%</p><p><strong>Mô tả:</strong> {{$json[\"description\"]}}</p><p><strong>AQI:</strong> {{$json[\"aqi\"]}} ({{$json[\"aqi_category\"]}}) — PM2.5: {{$json[\"pm25\"]}} | PM10: {{$json[\"pm10\"]}}</p><p><strong>Khuyến nghị:</strong> {{$json[\"recommendation\"]}}</p><!-- chart disabled until backend updated --></div>"
       },
       "name": "SendEmail",
       "type": "n8n-nodes-base.smtp",

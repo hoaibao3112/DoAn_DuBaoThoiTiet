@@ -10,6 +10,8 @@ from typing import Optional, List
 from app.gdrive import save_json_to_drive
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import io
+import base64
 
 # Import ML predictor
 try:
@@ -581,6 +583,83 @@ def get_current_weather(city: str = "Hanoi"):
         recommendation=recommendation,
         source=aqi_data.get("source", "api")
     )
+
+
+@router.get("/current_with_chart")
+def get_current_with_chart(city: str = "Hanoi"):
+    """Return current weather + AQI and a small PNG chart encoded as base64 under `chart_base64`.
+
+    This endpoint is identical to `/current` but adds a `chart_base64` field (string) when matplotlib
+    is available. The chart shows temperature/feels/humidity, AQI/PM2.5/PM10, and wind/POP if present.
+    """
+    # reuse existing logic
+    resp = get_current_weather(city)
+    try:
+        data = resp.dict()
+    except Exception:
+        # fallback: convert Pydantic model to dict
+        data = {
+            'city': resp.city,
+            'date': resp.date,
+            'temperature': resp.temperature,
+            'feels_like': resp.feels_like,
+            'humidity': resp.humidity,
+            'description': resp.description,
+            'aqi': resp.aqi,
+            'aqi_category': resp.aqi_category,
+            'pm25': resp.pm25,
+            'pm10': resp.pm10,
+            'recommendation': resp.recommendation,
+            'source': resp.source,
+        }
+
+    # generate chart PNG if matplotlib is available
+    try:
+        import matplotlib.pyplot as plt
+        # gather values
+        temp = float(data.get('temperature') or 0)
+        feels = float(data.get('feels_like') or temp)
+        hum = float(data.get('humidity') or 0)
+        aqi = float(data.get('aqi') or 0)
+        pm25 = float(data.get('pm25') or 0)
+        pm10 = float(data.get('pm10') or 0)
+        # wind/pop may not exist
+        wind_speed = float((data.get('wind_speed') or 0) or 0)
+        pop = data.get('pop')
+        if pop is not None:
+            try:
+                pop = float(pop)
+            except Exception:
+                pop = None
+
+        fig, axes = plt.subplots(1, 3, figsize=(11, 3.5), constrained_layout=True)
+        axes[0].bar(['Temp', 'Feels', 'Humidity'], [temp, feels, hum], color=['#ff7f0e', '#1f77b4', '#2ca02c'])
+        axes[0].set_title('Nhiệt độ & Độ ẩm')
+
+        axes[1].bar(['AQI', 'PM2.5', 'PM10'], [aqi, pm25, pm10], color=['#7f7f7f', '#d62728', '#9467bd'])
+        axes[1].set_title('AQI & Hạt mịn')
+
+        labels = ['Wind (m/s)']
+        values = [wind_speed]
+        colors = ['#17becf']
+        if pop is not None:
+            labels.append('POP (%)')
+            values.append(pop * 100 if pop <= 1 else pop)
+            colors.append('#8c564b')
+        axes[2].bar(labels, values, color=colors)
+        axes[2].set_title('Gió & POP')
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=100)
+        plt.close(fig)
+        buf.seek(0)
+        b64 = base64.b64encode(buf.read()).decode('ascii')
+        data['chart_base64'] = b64
+    except Exception:
+        # matplotlib not available or chart failed; just return data without chart
+        data['chart_base64'] = None
+
+    return data
 
 
 @router.post("/forecast", response_model=WeatherResponse)
